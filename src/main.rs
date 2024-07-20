@@ -3,6 +3,7 @@ use objc2::rc::Retained;
 use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
 use objc2_core_wlan::{CWInterface, CWWiFiClient};
 use serde::Serialize;
+use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -35,6 +36,7 @@ impl Wifi {
 }
 
 fn main() -> Result<()> {
+    // access interface
     let interface = unsafe {
         let manager = CLLocationManager::new();
         manager.requestAlwaysAuthorization();
@@ -48,9 +50,11 @@ fn main() -> Result<()> {
     }
     .ok_or(anyhow!("Unable to get wifi interface"))?;
 
+    // extract required data
     let wifi = unsafe { Wifi::from_interface(&interface) };
 
-    println!("{}", wifi.to_json()?);
+    // dump to file
+    fs::write("/tmp/spaceport.json", wifi.to_json()?)?;
 
     Ok(())
 }
