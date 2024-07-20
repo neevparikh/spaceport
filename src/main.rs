@@ -28,6 +28,15 @@ impl Wifi {
         }
     }
 
+    unsafe fn update(&mut self, interface: &Retained<CWInterface>) {
+        self.ssid = interface.ssid().map(|s| s.to_string());
+        self.power = interface.powerOn();
+        self.rssi = interface.rssiValue();
+        self.noise = interface.noiseMeasurement();
+        self.tx_rate = interface.transmitRate();
+        self.tx_power = interface.transmitPower();
+    }
+
     fn to_json(&self) -> Result<String> {
         let json = serde_json::to_string_pretty(&self)?;
         Ok(json)
@@ -51,5 +60,6 @@ fn main() -> Result<()> {
     let wifi = unsafe { Wifi::from_interface(&interface) };
 
     println!("{}", wifi.to_json()?);
+
     Ok(())
 }
