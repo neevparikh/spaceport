@@ -2,9 +2,9 @@
 
 cargo build --release
 
-mkdir -p ./Spaceport.app/Contents/MacOS/ 
-mkdir -p ./Spaceport.app/Contents/Resources/
+mkdir -p ./spaceport.app/Contents/MacOS/ 
+mkdir -p ./spaceport.app/Contents/Resources/
 
-cp ./target/release/spaceport ./Spaceport.app/Contents/MacOS/spaceport
-cp ./assets/icon.icns ./Spaceport.app/Contents/Resources/icon.icns
-cp info.plist ./Spaceport.app/Contents/Info.plist
+cp ./target/release/spaceport ./spaceport.app/Contents/MacOS/spaceport
+cp ./assets/icon.icns ./spaceport.app/Contents/Resources/icon.icns
+cp info.plist ./spaceport.app/Contents/Info.plist

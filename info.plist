@@ -5,9 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Spaceport</string>
+	<string>spaceport</string>
 	<key>CFBundleName</key>
-	<string>Spaceport</string>
+	<string>spaceport</string>
 	<key>CFBundleExecutable</key>
 	<string>spaceport</string>
 	<key>CFBundleIconFile</key>
