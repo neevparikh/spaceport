@@ -12,7 +12,6 @@ Uses Rust bindings for Obj-C and uses the CoreLocation and CoreWlan system libra
 
 ## Other
 ### Icon
-
-Icon used: https://iconscout.com/free-icon/space-1963537
-Attribution: https://iconscout.com/contributors/theiconz
-License: https://iconscout.com/licenses#iconscout
+* Icon used: https://iconscout.com/free-icon/space-1963537
+* Attribution: https://iconscout.com/contributors/theiconz
+* License: https://iconscout.com/licenses#iconscout
