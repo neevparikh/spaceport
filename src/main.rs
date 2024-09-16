@@ -36,8 +36,8 @@ impl Wifi {
 }
 
 fn main() -> Result<()> {
-    // access interface
-    let interface = unsafe {
+    // get location permissions
+    unsafe {
         let manager = CLLocationManager::new();
         manager.requestAlwaysAuthorization();
         manager.startUpdatingLocation();
@@ -45,16 +45,19 @@ fn main() -> Result<()> {
         while manager.authorizationStatus() != CLAuthorizationStatus(3) {
             sleep(Duration::from_millis(10))
         }
-
-        CWWiFiClient::sharedWiFiClient().interface()
     }
-    .ok_or(anyhow!("Unable to get wifi interface"))?;
 
-    // extract required data
-    let wifi = unsafe { Wifi::from_interface(&interface) };
+    loop {
+        // access interface
+        let interface = unsafe { CWWiFiClient::sharedWiFiClient().interface() }
+            .ok_or(anyhow!("Unable to get wifi interface"))?;
 
-    // dump to file
-    fs::write("/tmp/spaceport.json", wifi.to_json()?)?;
+        // extract required data
+        let wifi = unsafe { Wifi::from_interface(&interface) };
 
-    Ok(())
+        // dump to file
+        fs::write("/tmp/spaceport.json", wifi.to_json()?)?;
+
+        sleep(Duration::from_millis(400))
+    }
 }
