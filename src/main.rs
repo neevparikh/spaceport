@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
-use objc2::rc::Retained;
+use objc2::rc::autoreleasepool;
 use objc2_core_location::{CLAuthorizationStatus, CLLocationManager};
 use objc2_core_wlan::{CWInterface, CWWiFiClient};
 use serde::Serialize;
 use std::fs;
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Default, Serialize)]
 struct Wifi {
@@ -18,7 +18,7 @@ struct Wifi {
 }
 
 impl Wifi {
-    unsafe fn from_interface(interface: &Retained<CWInterface>) -> Self {
+    unsafe fn from_interface(interface: &CWInterface) -> Self {
         Wifi {
             ssid: interface.ssid().map(|s| s.to_string()),
             power: interface.powerOn(),
@@ -29,31 +29,59 @@ impl Wifi {
         }
     }
 
+    fn current(interface: &CWInterface) -> Self {
+        autoreleasepool(|_| unsafe { Self::from_interface(interface) })
+    }
+
     fn to_json(&self) -> Result<String> {
         let json = serde_json::to_string_pretty(&self)?;
         Ok(json)
     }
 }
 
-fn main() -> Result<()> {
-    // get location permissions
+fn ensure_location_authorization() -> Result<()> {
+    let manager = unsafe { CLLocationManager::new() };
     unsafe {
-        let manager = CLLocationManager::new();
-        manager.requestAlwaysAuthorization();
+        manager.requestWhenInUseAuthorization();
         manager.startUpdatingLocation();
-
-        while manager.authorizationStatus() != CLAuthorizationStatus(3) {
-            sleep(Duration::from_millis(10))
-        }
     }
 
+    let authorization_deadline = Instant::now() + Duration::from_secs(60);
     loop {
-        // access interface
-        let interface = unsafe { CWWiFiClient::sharedWiFiClient().interface() }
-            .ok_or(anyhow!("Unable to get wifi interface"))?;
+        let status = autoreleasepool(|_| unsafe { manager.authorizationStatus() });
+        match status {
+            CLAuthorizationStatus::kCLAuthorizationStatusAuthorizedAlways
+            | CLAuthorizationStatus::kCLAuthorizationStatusAuthorizedWhenInUse => {
+                unsafe { manager.stopUpdatingLocation() };
+                return Ok(());
+            }
+            CLAuthorizationStatus::kCLAuthorizationStatusDenied
+            | CLAuthorizationStatus::kCLAuthorizationStatusRestricted => {
+                unsafe { manager.stopUpdatingLocation() };
+                return Err(anyhow!(
+                    "Location access is required to read the Wi-Fi SSID"
+                ));
+            }
+            _ if Instant::now() >= authorization_deadline => {
+                unsafe { manager.stopUpdatingLocation() };
+                return Err(anyhow!(
+                    "Timed out waiting for location access; grant access and relaunch Spaceport"
+                ));
+            }
+            _ => sleep(Duration::from_millis(100)),
+        }
+    }
+}
 
+fn main() -> Result<()> {
+    ensure_location_authorization()?;
+
+    let interface = autoreleasepool(|_| unsafe { CWWiFiClient::sharedWiFiClient().interface() })
+        .ok_or_else(|| anyhow!("Unable to get wifi interface"))?;
+
+    loop {
         // extract required data
-        let wifi = unsafe { Wifi::from_interface(&interface) };
+        let wifi = Wifi::current(&interface);
 
         // dump to file
         fs::write("/tmp/spaceport.json", wifi.to_json()?)?;

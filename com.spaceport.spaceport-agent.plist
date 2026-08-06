@@ -6,7 +6,7 @@
 	<string>com.spaceport.spaceport-agent</string>
   <key>ProgramArguments</key>
   <array>
-    <string>open</string>
+    <string>/usr/bin/open</string>
     <string>/Applications/spaceport.app</string>
   </array>
 	<key>RunAtLoad</key>
@@ -22,7 +22,7 @@
   <string>/tmp/spaceport_neev.out.log</string>
   <key>StandardErrorPath</key>
   <string>/tmp/spaceport_neev.err.log</string>
-  <key>ProcessType></key>
+  <key>ProcessType</key>
   <string>Background</string>
 </dict>
 </plist>
